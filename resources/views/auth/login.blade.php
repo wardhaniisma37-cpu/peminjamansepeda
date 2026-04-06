@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lentora | E-Bike Login</title>
+    
+    <link rel="icon" type="image/png" href="{{ asset('assets/img/Avatar.png') }}">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Space Grotesk', system-ui, sans-serif;
+            background: #0a0f1c;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.08) 0%, rgba(0, 0, 0, 0) 50%),
+                        radial-gradient(circle at 80% 70%, rgba(0, 255, 150, 0.06) 0%, rgba(0, 0, 0, 0) 60%);
+            z-index: 0;
+        }
+
+        /* Dynamic grid pattern */
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 200, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 200, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Floating orbs - lebih kecil & subtle */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.3;
+            z-index: 0;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 200px;
+            height: 200px;
+            background: #00d4ff;
+            top: -80px;
+            left: -80px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 250px;
+            height: 250px;
+            background: #00ff9d;
+            bottom: -100px;
+            right: -100px;
+            animation-delay: 5s;
+            opacity: 0.25;
+        }
+
+        .orb-3 {
+            width: 180px;
+            height: 180px;
+            background: #7b2cbf;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 10s;
+            opacity: 0.15;
+            filter: blur(60px);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(20px, -20px) scale(1.05); }
+            66% { transform: translate(-15px, 15px) scale(0.95); }
+        }
+
+        /* Main Card - Lebih Kecil & Compact */
+        .login-card {
+            width: 100%;
+            max-width: 880px;
+            background: rgba(12, 18, 28, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 36px;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 255, 200, 0.12);
+            display: grid;
+            grid-template-columns: 1fr 0.9fr;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .login-card:hover {
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 255, 200, 0.25);
+        }
+
+        /* Left Panel - lebih padat */
+        .info-panel {
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.85) 0%, rgba(0, 40, 60, 0.7) 100%);
+            padding: 32px 28px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-panel::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -20%;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle, rgba(0, 255, 200, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Brand area - lebih kecil */
+        .brand-large {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 14px rgba(0, 212, 255, 0.25);
+        }
+
+        .logo-icon i {
+            font-size: 20px;
+            color: white;
+        }
+
+        .brand-text h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .brand-text span {
+            font-size: 0.6rem;
+            color: rgba(0, 255, 200, 0.8);
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        /* Main content info - lebih compact */
+        .info-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tagline {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 255, 200, 0.1);
+            padding: 4px 12px;
+            border-radius: 40px;
+            width: fit-content;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 255, 200, 0.2);
+        }
+
+        .tagline i {
+            color: #00ffcc;
+            font-size: 10px;
+        }
+
+        .tagline span {
+            color: #b0f0ff;
+            font-size: 0.65rem;
+            font-weight: 500;
+        }
+
+        .info-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            letter-spacing: -0.03em;
+        }
+
+        .info-title .gradient-text {
+            background: linear-gradient(135deg, #00ffcc, #00b4ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .info-desc {
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.75rem;
+            line-height: 1.45;
+            margin-bottom: 24px;
+            max-width: 95%;
+        }
+
+        /* Feature grid - lebih kecil */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 14px;
+            padding: 8px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+
+        .feature-card i {
+            font-size: 16px;
+            color: #00ffcc;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .feature-card h4 {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .feature-card p {
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Stats - lebih kecil */
+        .stats-row {
+            display: flex;
+            gap: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-number {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            color: rgba(0, 255, 200, 0.7);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        /* Right Panel - Form lebih compact */
+        .form-panel {
+            padding: 32px 30px;
+            background: rgba(8, 12, 20, 0.6);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            margin-bottom: 24px;
+        }
+
+        .form-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .form-header p {
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 0.75rem;
+        }
+
+        /* Form styling - lebih kecil */
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.7rem;
+            letter-spacing: 0.3px;
+        }
+
+        .input-field {
+            position: relative;
+        }
+
+        .input-field i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(0, 255, 200, 0.6);
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .input-field input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            background: rgba(20, 28, 40, 0.8);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            font-size: 0.8rem;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .input-field input:focus {
+            outline: none;
+            border-color: #00ffcc;
+            background: rgba(20, 28, 40, 1);
+            box-shadow: 0 0 0 3px rgba(0, 255, 200, 0.12);
+        }
+
+        .input-field input:focus + i {
+            color: #00ffcc;
+        }
+
+        .input-field input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 0.75rem;
+        }
+
+        /* Options row */
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+
+        .checkbox-custom {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .checkbox-custom input {
+            width: 14px;
+            height: 14px;
+            accent-color: #00ffcc;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #00ffcc;
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: #00d4ff;
+            text-decoration: underline;
+        }
+
+        /* Button - lebih kecil */
+        .login-btn {
+            width: 100%;
+            padding: 11px;
+            background: linear-gradient(105deg, #00ffcc, #0099ff);
+            border: none;
+            border-radius: 24px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #0a0f1c;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 16px rgba(0, 255, 200, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(0, 255, 200, 0.3);
+            filter: brightness(1.02);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Divider */
+        .divider-modern {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 20px 0 16px;
+        }
+
+        .divider-modern::before,
+        .divider-modern::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .divider-modern span {
+            padding: 0 12px;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.65rem;
+            font-weight: 500;
+        }
+
+        .register-link-modern {
+            text-align: center;
+        }
+
+        .register-link-modern a {
+            color: #00ffcc;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .register-link-modern a:hover {
+            text-decoration: underline;
+            color: #00e6ff;
+        }
+
+        .register-link-modern p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.7rem;
+        }
+
+        /* Alert Modern - lebih kecil */
+        .alert-modern {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            background: rgba(12, 18, 28, 0.96);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 10px 16px;
+            border-left: 3px solid;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            max-width: 320px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-success-modern {
+            border-left-color: #00ffcc;
+        }
+
+        .alert-error-modern {
+            border-left-color: #ff4d4d;
+        }
+
+        .alert-content-modern {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .alert-content-modern i:first-child {
+            font-size: 1rem;
+        }
+
+        .alert-success-modern i:first-child {
+            color: #00ffcc;
+        }
+
+        .alert-error-modern i:first-child {
+            color: #ff4d4d;
+        }
+
+        .alert-text h4 {
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-bottom: 3px;
+            color: white;
+        }
+
+        .alert-text p, .alert-text li {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .alert-text ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .alert-close-modern {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-left: auto;
+            transition: color 0.2s;
+        }
+
+        .alert-close-modern:hover {
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .login-card {
+                grid-template-columns: 1fr;
+                max-width: 440px;
+            }
+            
+            .info-panel {
+                padding: 24px 22px;
+            }
+            
+            .info-title {
+                font-size: 1.5rem;
+            }
+            
+            .feature-grid {
+                gap: 10px;
+            }
+            
+            .form-panel {
+                padding: 28px 24px;
+            }
+            
+            .stats-row {
+                gap: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                border-radius: 28px;
+            }
+            
+            .info-title {
+                font-size: 1.3rem;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-panel {
+                padding: 22px 18px;
+            }
+            
+            .brand-large {
+                margin-bottom: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Floating Orbs Background -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="login-card">
+        <!-- Left Panel: Brand & Features -->
+        <div class="info-panel">
+            <div class="brand-large">
+                <div class="logo-icon">
+                    <i class="fas fa-charging-station"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>Lentora</h1>
+                    <span>E-BIKE ECOSYSTEM</span>
+                </div>
+            </div>
+
+            <div class="info-content">
+                <div class="tagline">
+                    <i class="fas fa-bolt"></i>
+                    <span>ELECTRIFY YOUR FLEET</span>
+                </div>
+                
+                <div class="info-title">
+                    Power your<br>
+                    <span class="gradient-text">E-Mobility</span><br>
+                    Management
+                </div>
+                
+                <div class="info-desc">
+                    Centralized dashboard for tracking, analytics, and seamless rental operations.
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <h4>Live Tracking</h4>
+                        <p>Real-time GPS</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-charging-station"></i>
+                        <h4>Smart Charging</h4>
+                        <p>Battery health</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-chart-simple"></i>
+                        <h4>Deep Analytics</h4>
+                        <p>Revenue insights</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-shield-hooded"></i>
+                        <h4>Secure Access</h4>
+                        <p>Enterprise-grade</p>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-number">3.2k+</span>
+                        <span class="stat-label">Active Riders</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">280+</span>
+                        <span class="stat-label">Smart Bikes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-label">Uptime</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Login Form -->
+        <div class="form-panel">
+            <div class="form-header">
+                <h2>Access dashboard</h2>
+                <p>Sign in to manage your electric fleet</p>
+            </div>
+
+            <form action="/auth/login" method="POST">
+                @csrf
+                
+                <div class="input-group">
+                    <label class="input-label" for="email">Work Email</label>
+                    <div class="input-field">
+                        <i class="far fa-envelope"></i>
+                        <input type="email" 
+                               id="email" 
+                               name="email" 
+                               placeholder="hello@lentora.com"
+                               value="{{ old('email') }}"
+                               required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label" for="password">Password</label>
+                    <div class="input-field">
+                        <i class="fas fa-key"></i>
+                        <input type="password" 
+                               id="password" 
+                               name="password" 
+                               placeholder="················"
+                               required>
+                    </div>
+                </div>
+
+                <div class="options-row">
+                    <label class="checkbox-custom">
+                        <input type="checkbox" name="remember">
+                        <span>Keep me signed in</span>
+                    </label>
+                    <a href="#" class="forgot-link">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-arrow-right-to-bracket"></i>
+                    Sign In
+                </button>
+
+                <div class="divider-modern">
+                    <span>new to Lentora?</span>
+                </div>
+
+                <div class="register-link-modern">
+                    <p>Don't have an account? <a href="/register">Create account →</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alert Messages with Modern Style -->
+    @if (session('success'))
+    <div class="alert-modern alert-success-modern" id="successAlert">
+        <div class="alert-content-modern">
+            <i class="fas fa-check-circle"></i>
+            <div class="alert-text">
+                <h4>Welcome back!</h4>
+                <p>{{ session('success') }}</p>
+            </div>
+            <button class="alert-close-modern" onclick="this.closest('.alert-modern').remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    @endif
+
+    @if (session('error'))
+    <div class="alert-modern alert-error-modern" id="errorAlert">
+        <div class="alert-content-modern">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div class="alert-text">
+                <h4>Access denied</h4>
+                <p>{{ session('error') }}</p>
+            </div>
+            <button class="alert-close-modern" onclick="this.closest('.alert-modern').remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    @endif
+
+    @if ($errors->any())
+    <div class="alert-modern alert-error-modern" id="validationAlert">
+        <div class="alert-content-modern">
+            <i class="fas fa-circle-exclamation"></i>
+            <div class="alert-text">
+                <h4>Validation errors</h4>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <button class="alert-close-modern" onclick="this.closest('.alert-modern').remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    @endif
+
+    <script>
+        // Auto dismiss alerts after 4 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert-modern').forEach(alert => {
+                alert.style.animation = 'slideIn 0.3s reverse';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 4000);
+
+        // Loading state for login button
+        const loginForm = document.querySelector('form');
+        const loginBtn = document.querySelector('.login-btn');
+        
+        if (loginForm && loginBtn) {
+            loginForm.addEventListener('submit', function(e) {
+                if (this.checkValidity()) {
+                    loginBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Signing in...';
+                    loginBtn.disabled = true;
+                    loginBtn.style.opacity = '0.8';
+                }
+            });
+        }
+
+        // Interactive input effect
+        const inputs = document.querySelectorAll('.input-field input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.01)';
+            });
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>
