@@ -48,8 +48,6 @@
         .condition-card:hover, .payment-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
         .condition-card.selected, .payment-card.selected { border-color: var(--soft-blue-500); background-color: var(--soft-blue-50); }
         .gradient-text { background: linear-gradient(135deg, var(--soft-blue-700), var(--soft-blue-500)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        .search-filter { transition: all 0.2s ease; }
-        .search-filter:focus { border-color: var(--soft-blue-500); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
         @media (max-width: 768px) { .sm\:ml-64 { margin-left: 0; } .card { padding: 1rem; } .page-header { padding: 1rem 1.2rem !important; } }
@@ -77,7 +75,10 @@
                 @if($userRole === 'admin' || $userRole === 'petugas')
                 <li><a href="{{ route('items') }}" class="sidebar-item flex items-center text-gray-700 hover:text-blue-700"><i class="fas fa-box w-5 text-blue-500"></i><span class="ms-2">Inventaris</span></a></li>
                 @endif
-                <li><a href="{{ route('pinjamBarang') }}" class="sidebar-item flex items-center text-gray-700 hover:text-blue-700 active"><i class="fas fa-hand-holding-heart w-5 text-blue-500"></i><span class="ms-2">Peminjaman</span></a></li>
+                @if($userRole === 'admin' || $userRole === 'petugas')
+                <li><a href="{{ route('transactions') }}" class="sidebar-item active flex items-center"><i class="fas fa-cash-register w-5 text-blue-500"></i><span class="ms-2">Transaksi</span></a></li>
+                @endif
+                <li><a href="{{ route('pinjamBarang') }}" class="sidebar-item flex items-center text-gray-700 hover:text-blue-700"><i class="fas fa-hand-holding-heart w-5 text-blue-500"></i><span class="ms-2">Peminjaman</span></a></li>
                 @if($userRole === 'admin')
                 <li><a href="{{ route('users') }}" class="sidebar-item flex items-center text-gray-700 hover:text-blue-700"><i class="fas fa-users w-5 text-blue-500"></i><span class="ms-2">Kelola User</span></a></li>
                 @endif
@@ -116,56 +117,19 @@
 
         <!-- Tabel Peminjaman -->
         <div class="card !p-0 mb-7 overflow-hidden">
-            <div class="flex justify-between items-center px-5 pt-4 pb-2 flex-wrap gap-3">
-                <h2 class="text-lg font-bold gradient-text">Riwayat Peminjaman</h2>
-                @if(in_array($userRole, ['admin', 'petugas']))
-                <div class="flex gap-2">
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
-                        <input type="text" id="searchInput" placeholder="Cari peminjam atau barang..." class="pl-9 pr-4 py-2 text-sm border border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 w-64">
-                    </div>
-                    <select id="statusFilter" class="px-3 py-2 text-sm border border-blue-200 rounded-xl focus:outline-none focus:border-blue-500">
-                        <option value="all">Semua Status</option>
-                        <option value="borrowed">Dipinjam</option>
-                        <option value="returned">Dikembalikan</option>
-                    </select>
-                </div>
-                @endif
-            </div>
+            <div class="flex justify-between items-center px-5 pt-4 pb-2"><h2 class="text-lg font-bold gradient-text">📋 Riwayat Peminjaman</h2></div>
             <div class="table-container">
-                <table class="w-full text-sm" id="loanTable">
+                <table class="w-full text-sm">
                     <thead class="bg-blue-50">
-                        <tr>
-                            <th class="px-4 py-3">No</th>
-                            <th>Barang</th>
-                            <th>Jml</th>
-                            <th>Peminjam</th>
-                            @if(in_array($userRole, ['admin', 'petugas']))
-                            <th>Petugas</th>
-                            @endif
-                            <th>Status</th>
-                            <th>Tgl Pinjam</th>
-                            <th>Tgl Kembali</th>
-                            <th>Denda</th>
-                            <th>Aksi</th>
-                        </tr>
+                        <tr><th class="px-4 py-3">No</th><th>Barang</th><th>Jml</th><th>Peminjam</th><th>Status</th><th>Tgl Pinjam</th><th>Tgl Kembali</th><th>Denda</th><th>Aksi</th></tr>
                     </thead>
                     <tbody>
                         @forelse ($loans as $loan)
-                        <tr class="border-b hover:bg-blue-50/50" data-status="{{ $loan->status }}" data-borrower="{{ strtolower($loan->user?->name ?? '') }}" data-item="{{ strtolower($loan->item?->name ?? '') }}">
+                        <tr class="border-b hover:bg-blue-50/50">
                             <td class="px-4 py-2">{{ $loop->iteration }}</td>
                             <td class="px-4 py-2">{{ $loan->item?->name ?? 'Item tidak ditemukan' }}</td>
                             <td class="px-4 py-2">{{ $loan->amount }}</td>
-                            <td class="px-4 py-2 font-medium">{{ $loan->user?->name ?? 'User tidak ditemukan' }}</td>
-                            @if(in_array($userRole, ['admin', 'petugas']))
-                            <td class="px-4 py-2">
-                                @if($loan->processed_by)
-                                    <span class="text-xs text-gray-600">{{ $loan->processor?->name ?? '-' }}</span>
-                                @else
-                                    <span class="text-xs text-gray-400">-</span>
-                                @endif
-                            </td>
-                            @endif
+                            <td class="px-4 py-2">{{ $loan->user?->name ?? 'User tidak ditemukan' }}</td>
                             <td class="px-4 py-2">
                                 @if($loan->status == 'returned') 
                                     <span class="status-badge bg-green-100 text-green-800"><i class="fas fa-check-circle"></i> Dikembalikan</span>
@@ -178,26 +142,14 @@
                             <td class="px-4 py-2">@if($loan->penalty_amount > 0) Rp {{ number_format($loan->penalty_amount, 0, ',', '.') }} @else - @endif</td>
                             <td class="px-4 py-2">
                                 @if ($loan->status !== 'returned')
-                                    @if(in_array($userRole, ['admin', 'petugas']))
-                                        <button data-modal-target="return-modal-{{ $loan->id }}" data-modal-toggle="return-modal-{{ $loan->id }}" class="btn-primary text-xs py-1.5 px-3" type="button">
-                                            <i class="fas fa-undo-alt"></i> Kembalikan
-                                        </button>
-                                    @else
-                                        <span class="text-xs text-gray-400 italic">Menunggu petugas</span>
-                                    @endif
+                                <button data-modal-target="return-modal-{{ $loan->id }}" data-modal-toggle="return-modal-{{ $loan->id }}" class="btn-primary text-xs py-1.5 px-3"><i class="fas fa-undo-alt"></i> Kembalikan</button>
                                 @else
-                                    <a href="{{ route('loans.struk', $loan->id) }}" class="btn-outline text-xs py-1.5 px-3">
-                                        <i class="fas fa-print"></i> Cetak Struk
-                                    </a>
+                                <a href="{{ route('loans.struk', $loan->id) }}" class="btn-outline text-xs py-1.5 px-3"><i class="fas fa-print"></i> Cetak Struk</a>
                                 @endif
                             </td>
                         </tr>
                         @empty
-                        <tr>
-                            <td colspan="{{ in_array($userRole, ['admin', 'petugas']) ? '10' : '9' }}" class="text-center py-8 text-gray-400">
-                                <i class="fas fa-inbox text-3xl mb-2 block"></i>Belum ada data peminjaman
-                            </td>
-                        </tr>
+                        <tr><td colspan="9" class="text-center py-8 text-gray-400"><i class="fas fa-inbox text-3xl mb-2 block"></i>Belum ada data peminjaman</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -206,446 +158,246 @@
 
         <!-- Form Peminjaman Baru -->
         <div class="card">
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-plus-circle text-blue-500 text-lg"></i>
-                </div>
-                <h2 class="text-xl font-bold gradient-text">Tambah Peminjaman Baru</h2>
-            </div>
+            <div class="flex items-center gap-3 mb-5"><div class="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center"><i class="fas fa-plus-circle text-blue-500 text-lg"></i></div><h2 class="text-xl font-bold gradient-text">Tambah Peminjaman Baru</h2></div>
             <form action="{{ route('items.borrow') }}" method="POST">
                 @csrf
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div>
-                        <label class="form-label">Nama Barang</label>
-                        <select name="item_id" class="form-select" required>
-                            <option value="" disabled selected>Pilih Barang</option>
-                            @foreach ($items as $item)
-                            <option value="{{ $item->id }}">{{ $item->name }} (Stok: {{ $item->stock }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-label">Jumlah</label>
-                        <input type="number" name="amount" class="form-input" placeholder="Jumlah" required min="1">
-                    </div>
-                    
-                    @if(in_array($userRole, ['admin', 'petugas']) && isset($allUsers) && $allUsers->count() > 0)
-                    <div>
-                        <label class="form-label">Peminjam (Pilih User)</label>
-                        <select name="user_id" class="form-select" required>
-                            <option value="" disabled selected>Pilih Peminjam</option>
-                            @foreach($allUsers as $user)
-                            <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->role }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @elseif(in_array($userRole, ['admin', 'petugas']) && (!isset($allUsers) || $allUsers->count() == 0))
-                    <div>
-                        <label class="form-label">Peminjam (Pilih User)</label>
-                        <select name="user_id" class="form-select" required>
-                            <option value="" disabled selected>Tidak ada user tersedia</option>
-                        </select>
-                    </div>
-                    @else
-                    <div>
-                        <label class="form-label">Peminjam</label>
-                        <input type="text" class="form-input" value="{{ Auth::user()->name }}" readonly>
-                        <input type="hidden" name="user_id" value="{{ Auth::id() }}">
-                    </div>
-                    @endif
-                    
-                    <div>
-                        <label class="form-label">Tanggal Pinjam</label>
-                        <input type="date" name="borrow_date" class="form-input" value="{{ now()->format('Y-m-d') }}" readonly>
-                    </div>
-                    <div class="lg:col-span-2">
-                        <label class="form-label">Keterangan</label>
-                        <input type="text" name="description" class="form-input" placeholder="Keperluan / keterangan">
-                    </div>
+                    <div><label class="form-label">Nama Barang</label><select name="item_id" class="form-select" required><option value="" disabled selected>Pilih Barang</option>@foreach ($items as $item)<option value="{{ $item->id }}">{{ $item->name }} (Stok: {{ $item->stock }})</option>@endforeach</select></div>
+                    <div><label class="form-label">Jumlah</label><input type="number" name="amount" class="form-input" placeholder="Jumlah" required min="1"></div>
+                    <div><label class="form-label">Peminjam</label><input type="text" name="user" class="form-input" value="{{ Auth::user()->name }}" readonly></div>
+                    <div><label class="form-label">Tanggal Pinjam</label><input type="date" name="borrow_date" class="form-input" value="{{ now()->format('Y-m-d') }}" readonly></div>
+                    <div class="lg:col-span-2"><label class="form-label">Keterangan</label><input type="text" name="description" class="form-input" placeholder="Keperluan / keterangan"></div>
                 </div>
-                <div class="flex justify-end mt-6">
-                    <button type="submit" class="btn-primary px-6 py-2">
-                        <i class="fas fa-paper-plane mr-1"></i> Submit Peminjaman
-                    </button>
-                </div>
+                <div class="flex justify-end mt-6"><button type="submit" class="btn-primary px-6 py-2"><i class="fas fa-paper-plane mr-1"></i> Submit Peminjaman</button></div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL PENGEMBALIAN -->
+    <!-- MODAL PENGEMBALIAN (Form Pengembalian Barang) -->
     @foreach ($loans as $loan)
-        @if($loan->status !== 'returned')
-        <div id="return-modal-{{ $loan->id }}" tabindex="-1" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-            <div class="relative p-4 w-full max-w-2xl max-h-full">
-                <div class="relative bg-white rounded-2xl shadow-xl border border-blue-100">
-                    <div class="flex items-center justify-between p-5 border-b rounded-t bg-gradient-to-r from-blue-600 to-blue-500">
-                        <h3 class="text-xl font-semibold text-white flex items-center gap-2">
-                            <i class="fas fa-undo-alt"></i> Form Pengembalian Barang
-                        </h3>
-                        <button type="button" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center" data-modal-hide="return-modal-{{ $loan->id }}">
-                            <i class="fas fa-times"></i>
+    @if($loan->status !== 'returned')
+    <div id="return-modal-{{ $loan->id }}" tabindex="-1" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-2xl max-h-full">
+            <div class="relative bg-white rounded-2xl shadow-xl border border-blue-100">
+                <div class="flex items-center justify-between p-5 border-b rounded-t bg-gradient-to-r from-blue-600 to-blue-500">
+                    <h3 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-undo-alt"></i> Form Pengembalian Barang
+                    </h3>
+                    <button type="button" class="text-white/80 hover:text-white hover:bg-white/20 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center" data-modal-hide="return-modal-{{ $loan->id }}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form action="{{ route('loans.processReturn', $loan->id) }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="p-6 space-y-4">
+                        <!-- Info Peminjaman -->
+                        <div class="bg-blue-50 rounded-xl p-4">
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div><span class="text-gray-500">Barang:</span> <span class="font-semibold">{{ $loan->item->name ?? 'N/A' }}</span></div>
+                                <div><span class="text-gray-500">Jumlah:</span> <span class="font-semibold">{{ $loan->amount }} unit</span></div>
+                                <div><span class="text-gray-500">Peminjam:</span> <span class="font-semibold">{{ $loan->user->name ?? 'N/A' }}</span></div>
+                                <div><span class="text-gray-500">Tgl Pinjam:</span> <span class="font-semibold">{{ \Carbon\Carbon::parse($loan->borrow_date)->format('d/m/Y') }}</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Kondisi Barang -->
+                        <div>
+                            <label class="form-label text-base font-semibold">Kondisi Barang Saat Dikembalikan</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                                <div class="condition-card border rounded-xl p-3 text-center cursor-pointer" data-condition="baik" data-penalty="0">
+                                    <i class="fas fa-check-circle text-green-500 text-2xl mb-1"></i>
+                                    <p class="font-medium text-sm">Baik</p>
+                                    <p class="text-xs text-gray-400">Tidak ada denda</p>
+                                    <input type="radio" name="condition_return" value="baik" class="condition-radio hidden" required>
+                                </div>
+                                <div class="condition-card border rounded-xl p-3 text-center cursor-pointer" data-condition="rusak_ringan" data-penalty="150000">
+                                    <i class="fas fa-tools text-yellow-500 text-2xl mb-1"></i>
+                                    <p class="font-medium text-sm">Rusak Ringan</p>
+                                    <p class="text-xs text-yellow-600">Denda Rp150.000</p>
+                                    <input type="radio" name="condition_return" value="rusak_ringan" class="condition-radio hidden">
+                                </div>
+                                <div class="condition-card border rounded-xl p-3 text-center cursor-pointer" data-condition="rusak_berat" data-penalty="500000">
+                                    <i class="fas fa-exclamation-triangle text-orange-500 text-2xl mb-1"></i>
+                                    <p class="font-medium text-sm">Rusak Berat</p>
+                                    <p class="text-xs text-orange-600">Denda Rp500.000</p>
+                                    <input type="radio" name="condition_return" value="rusak_berat" class="condition-radio hidden">
+                                </div>
+                                <div class="condition-card border rounded-xl p-3 text-center cursor-pointer" data-condition="hilang" data-penalty="3350000">
+                                    <i class="fas fa-search text-red-500 text-2xl mb-1"></i>
+                                    <p class="font-medium text-sm">Hilang</p>
+                                    <p class="text-xs text-red-600">Denda Rp3.350.000</p>
+                                    <input type="radio" name="condition_return" value="hilang" class="condition-radio hidden">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Deskripsi Kerusakan -->
+                        <div id="damage-section-{{ $loan->id }}" class="hidden">
+                            <label class="form-label">Deskripsi Kerusakan</label>
+                            <textarea name="damage_description" class="form-input" rows="2" placeholder="Jelaskan kerusakan yang terjadi..."></textarea>
+                        </div>
+
+                        <!-- Info Denda -->
+                        <div id="penalty-info-{{ $loan->id }}" class="hidden">
+                            <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-red-700"><i class="fas fa-money-bill-wave mr-2"></i>Denda yang Harus Dibayar:</span>
+                                    <span id="penalty-amount-display-{{ $loan->id }}" class="text-2xl font-bold text-red-600">Rp 0</span>
+                                </div>
+                                <input type="hidden" name="penalty_amount" id="penalty-input-{{ $loan->id }}" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Metode Pembayaran -->
+                        <div id="payment-section-{{ $loan->id }}" class="hidden">
+                            <label class="form-label font-semibold">Metode Pembayaran Denda</label>
+                            <div class="grid grid-cols-2 gap-3 mt-2">
+                                <div class="payment-card border rounded-xl p-3 text-center cursor-pointer" data-method="cash">
+                                    <i class="fas fa-money-bill-wave text-green-500 text-2xl mb-1"></i>
+                                    <p class="font-medium">Tunai (Cash)</p>
+                                    <input type="radio" name="payment_method" value="cash" class="payment-radio hidden">
+                                </div>
+                                <div class="payment-card border rounded-xl p-3 text-center cursor-pointer" data-method="transfer">
+                                    <i class="fas fa-university text-blue-500 text-2xl mb-1"></i>
+                                    <p class="font-medium">Transfer Bank</p>
+                                    <input type="radio" name="payment_method" value="transfer" class="payment-radio hidden">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Bukti Transfer -->
+                        <div id="proof-section-{{ $loan->id }}" class="hidden">
+                            <label class="form-label">Upload Bukti Transfer</label>
+                            <input type="file" name="payment_proof" class="form-input" accept="image/*">
+                            <p class="text-xs text-gray-400 mt-1">Format: JPG, PNG (Max 2MB)</p>
+                        </div>
+
+                        <!-- Info Rekening -->
+                        <div id="bank-info-{{ $loan->id }}" class="hidden">
+                            <div class="bg-blue-50 rounded-xl p-3 text-sm">
+                                <p class="font-semibold">Rekening Tujuan:</p>
+                                <p>🏦 Bank BCA: 1234567890 a.n. E-Bike Rental</p>
+                                <p>🏦 Bank Mandiri: 9876543210 a.n. E-Bike Rental</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 p-6 border-t border-blue-100">
+                        <button type="button" data-modal-hide="return-modal-{{ $loan->id }}" class="btn-outline">
+                            <i class="fas fa-times mr-1"></i> Batal
+                        </button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-check mr-1"></i> Proses Pengembalian
                         </button>
                     </div>
-                    
-                    <form action="{{ route('loans.processReturn', $loan->id) }}" method="POST" enctype="multipart/form-data" id="return-form-{{ $loan->id }}">
-                        @csrf
-                        <div class="p-6 space-y-4">
-                            <!-- Info Peminjaman -->
-                            <div class="bg-blue-50 rounded-xl p-4">
-                                <div class="grid grid-cols-2 gap-3 text-sm">
-                                    <div><span class="text-gray-500">Barang:</span> <span class="font-semibold">{{ $loan->item->name ?? 'N/A' }}</span></div>
-                                    <div><span class="text-gray-500">Jumlah:</span> <span class="font-semibold">{{ $loan->amount }} unit</span></div>
-                                    <div><span class="text-gray-500">Peminjam:</span> <span class="font-semibold">{{ $loan->user->name ?? 'N/A' }}</span></div>
-                                    <div><span class="text-gray-500">Tgl Pinjam:</span> <span class="font-semibold">{{ \Carbon\Carbon::parse($loan->borrow_date)->format('d/m/Y') }}</span></div>
-                                </div>
-                            </div>
-
-                            <!-- Kondisi Barang -->
-                            <div>
-                                <label class="form-label text-base font-semibold">Kondisi Barang Saat Dikembalikan</label>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-                                    <div class="condition-card border rounded-xl p-3 text-center cursor-pointer" data-condition="baik" data-penalty="0" data-modal-id="{{ $loan->id }}">
-                                        <i class="fas fa-check-circle text-green-500 text-2xl mb-1"></i>
-                                        <p class="font-medium text-sm">Baik</p>
-                                        <p class="text-xs text-gray-400">Tidak ada denda</p>
-                                        <input type="radio" name="condition_return" value="baik" class="condition-radio hidden" required>
-                                    </div>
-                                    <div class="condition-card border rounded-xl p-3 text-center cursor-pointer" data-condition="rusak_ringan" data-penalty="150000" data-modal-id="{{ $loan->id }}">
-                                        <i class="fas fa-tools text-yellow-500 text-2xl mb-1"></i>
-                                        <p class="font-medium text-sm">Rusak Ringan</p>
-                                        <p class="text-xs text-yellow-600">Denda Rp150.000</p>
-                                        <input type="radio" name="condition_return" value="rusak_ringan" class="condition-radio hidden">
-                                    </div>
-                                    <div class="condition-card border rounded-xl p-3 text-center cursor-pointer" data-condition="rusak_berat" data-penalty="500000" data-modal-id="{{ $loan->id }}">
-                                        <i class="fas fa-exclamation-triangle text-orange-500 text-2xl mb-1"></i>
-                                        <p class="font-medium text-sm">Rusak Berat</p>
-                                        <p class="text-xs text-orange-600">Denda Rp500.000</p>
-                                        <input type="radio" name="condition_return" value="rusak_berat" class="condition-radio hidden">
-                                    </div>
-                                    <div class="condition-card border rounded-xl p-3 text-center cursor-pointer" data-condition="hilang" data-penalty="3350000" data-modal-id="{{ $loan->id }}">
-                                        <i class="fas fa-search text-red-500 text-2xl mb-1"></i>
-                                        <p class="font-medium text-sm">Hilang</p>
-                                        <p class="text-xs text-red-600">Denda Rp3.350.000</p>
-                                        <input type="radio" name="condition_return" value="hilang" class="condition-radio hidden">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Deskripsi Kerusakan -->
-                            <div id="damage-section-{{ $loan->id }}" class="hidden">
-                                <label class="form-label">Deskripsi Kerusakan</label>
-                                <textarea name="damage_description" class="form-input" rows="2" placeholder="Jelaskan kerusakan yang terjadi..."></textarea>
-                            </div>
-
-                            <!-- Info Denda -->
-                            <div id="penalty-info-{{ $loan->id }}" class="hidden">
-                                <div class="bg-red-50 border border-red-200 rounded-xl p-4">
-                                    <div class="flex items-center justify-between">
-                                        <span class="font-semibold text-red-700"><i class="fas fa-money-bill-wave mr-2"></i>Denda yang Harus Dibayar:</span>
-                                        <span id="penalty-amount-display-{{ $loan->id }}" class="text-2xl font-bold text-red-600">Rp 0</span>
-                                    </div>
-                                    <input type="hidden" name="penalty_amount" id="penalty-input-{{ $loan->id }}" value="0">
-                                </div>
-                            </div>
-
-                            <!-- Metode Pembayaran -->
-                            <div id="payment-section-{{ $loan->id }}" class="hidden">
-                                <label class="form-label font-semibold">Metode Pembayaran Denda</label>
-                                <div class="grid grid-cols-2 gap-3 mt-2">
-                                    <div class="payment-card border rounded-xl p-3 text-center cursor-pointer" data-method="cash" data-modal-id="{{ $loan->id }}">
-                                        <i class="fas fa-money-bill-wave text-green-500 text-2xl mb-1"></i>
-                                        <p class="font-medium">Tunai (Cash)</p>
-                                        <input type="radio" name="payment_method" value="cash" class="payment-radio hidden">
-                                    </div>
-                                    <div class="payment-card border rounded-xl p-3 text-center cursor-pointer" data-method="transfer" data-modal-id="{{ $loan->id }}">
-                                        <i class="fas fa-university text-blue-500 text-2xl mb-1"></i>
-                                        <p class="font-medium">Transfer Bank</p>
-                                        <input type="radio" name="payment_method" value="transfer" class="payment-radio hidden">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Upload Bukti Transfer -->
-                            <div id="proof-section-{{ $loan->id }}" class="hidden">
-                                <label class="form-label">Upload Bukti Transfer</label>
-                                <input type="file" name="payment_proof" class="form-input" accept="image/*,application/pdf">
-                                <p class="text-xs text-gray-400 mt-1">Format: JPG, PNG, PDF (Max 2MB)</p>
-                            </div>
-
-                            <!-- Info Rekening -->
-                            <div id="bank-info-{{ $loan->id }}" class="hidden">
-                                <div class="bg-blue-50 rounded-xl p-3 text-sm">
-                                    <p class="font-semibold">Rekening Tujuan:</p>
-                                    <p>🏦 Bank BCA: 1234567890 a.n. E-Bike Rental</p>
-                                    <p>🏦 Bank Mandiri: 9876543210 a.n. E-Bike Rental</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end gap-3 p-6 border-t border-blue-100">
-                            <button type="button" data-modal-hide="return-modal-{{ $loan->id }}" class="btn-outline">
-                                <i class="fas fa-times mr-1"></i> Batal
-                            </button>
-                            <button type="submit" class="btn-primary" id="submit-btn-{{ $loan->id }}">
-                                <i class="fas fa-check mr-1"></i> Proses Pengembalian
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                </form>
             </div>
-        </div>
-        @endif
-    @endforeach
-
-    @if (session('success'))
-    <div class="alert">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-check text-green-500 text-sm"></i>
-            </div>
-            <div>
-                <p class="font-semibold text-sm">Berhasil!</p>
-                <p class="text-xs text-gray-600">{{ session('success') }}</p>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400">
-                <i class="fas fa-times"></i>
-            </button>
         </div>
     </div>
     @endif
+    @endforeach
+
+    @if (session('success'))
+    <div class="alert"><div class="flex items-center gap-2"><div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center"><i class="fas fa-check text-green-500 text-sm"></i></div><div><p class="font-semibold text-sm">Berhasil!</p><p class="text-xs text-gray-600">{{ session('success') }}</p></div><button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400"><i class="fas fa-times"></i></button></div></div>
+    @endif
 
     @if (session('error'))
-    <div class="alert border-l-4 border-red-500">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-exclamation text-red-500 text-sm"></i>
-            </div>
-            <div>
-                <p class="font-semibold text-sm">Error!</p>
-                <p class="text-xs text-gray-600">{{ session('error') }}</p>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    </div>
+    <div class="alert border-l-4 border-red-500"><div class="flex items-center gap-2"><div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center"><i class="fas fa-exclamation text-red-500 text-sm"></i></div><div><p class="font-semibold text-sm">Error!</p><p class="text-xs text-gray-600">{{ session('error') }}</p></div><button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400"><i class="fas fa-times"></i></button></div></div>
     @endif
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
     <script>
-        // Constants for penalties
-        const PENALTY_RINGAN = 150000;
-        const PENALTY_BERAT = 500000;
-        const PENALTY_HILANG = 3350000;
-
-        // Function to initialize event listeners for a specific modal
-        function initModalListeners(modalId) {
-            const modal = document.getElementById(modalId);
-            if (!modal) return;
-
-            // Get modal suffix ID
-            const modalSuffix = modalId.split('-').pop();
+        // Modal handlers dengan denda tetap (Rp150.000, Rp500.000, Rp3.350.000)
+        @foreach ($loans as $loan)
+        @if($loan->status !== 'returned')
+        (function() {
+            const modalId = 'return-modal-{{ $loan->id }}';
             
-            // Get elements
-            const conditionCards = modal.querySelectorAll('.condition-card');
-            const damageSection = document.getElementById('damage-section-' + modalSuffix);
-            const penaltyInfo = document.getElementById('penalty-info-' + modalSuffix);
-            const paymentSection = document.getElementById('payment-section-' + modalSuffix);
-            const penaltyAmountSpan = document.getElementById('penalty-amount-display-' + modalSuffix);
-            const penaltyInput = document.getElementById('penalty-input-' + modalSuffix);
-            const proofSection = document.getElementById('proof-section-' + modalSuffix);
-            const bankInfo = document.getElementById('bank-info-' + modalSuffix);
-
-            // Condition card click handlers
+            const PENALTY_RINGAN = 150000;
+            const PENALTY_BERAT = 500000;
+            const PENALTY_HILANG = 3350000;
+            
+            const conditionCards = document.querySelectorAll(`#${modalId} .condition-card`);
+            const damageSection = document.getElementById('damage-section-{{ $loan->id }}');
+            const penaltyInfo = document.getElementById('penalty-info-{{ $loan->id }}');
+            const paymentSection = document.getElementById('payment-section-{{ $loan->id }}');
+            const penaltyAmountSpan = document.getElementById('penalty-amount-display-{{ $loan->id }}');
+            const penaltyInput = document.getElementById('penalty-input-{{ $loan->id }}');
+            const proofSection = document.getElementById('proof-section-{{ $loan->id }}');
+            const bankInfo = document.getElementById('bank-info-{{ $loan->id }}');
+            
             conditionCards.forEach(card => {
-                // Remove existing listener to avoid duplicates
-                card.removeEventListener('click', card._listener);
-                
-                card._listener = function(e) {
-                    e.preventDefault();
-                    
-                    // Remove selected class from all condition cards
-                    conditionCards.forEach(c => {
-                        c.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
-                        const radio = c.querySelector('.condition-radio');
-                        if (radio) radio.checked = false;
-                    });
-                    
-                    // Add selected class to clicked card
+                card.addEventListener('click', function() {
+                    conditionCards.forEach(c => c.classList.remove('selected', 'border-blue-500', 'bg-blue-50'));
                     this.classList.add('selected', 'border-blue-500', 'bg-blue-50');
-                    
-                    // Check the radio button
                     const radio = this.querySelector('.condition-radio');
-                    if (radio) {
-                        radio.checked = true;
-                        // Trigger change event
-                        const changeEvent = new Event('change', { bubbles: true });
-                        radio.dispatchEvent(changeEvent);
-                    }
+                    if(radio) radio.checked = true;
                     
                     const condition = this.dataset.condition;
                     
                     if (condition !== 'baik') {
-                        // Show damage section
-                        if (damageSection) damageSection.classList.remove('hidden');
+                        if(damageSection) damageSection.classList.remove('hidden');
                         
-                        // Set penalty based on condition
                         let penalty = 0;
                         switch(condition) {
-                            case 'rusak_ringan': 
-                                penalty = PENALTY_RINGAN; 
-                                break;
-                            case 'rusak_berat': 
-                                penalty = PENALTY_BERAT; 
-                                break;
-                            case 'hilang': 
-                                penalty = PENALTY_HILANG; 
-                                break;
-                            default: 
-                                penalty = 0;
+                            case 'rusak_ringan': penalty = PENALTY_RINGAN; break;
+                            case 'rusak_berat': penalty = PENALTY_BERAT; break;
+                            case 'hilang': penalty = PENALTY_HILANG; break;
+                            default: penalty = 0;
                         }
                         
                         const formattedPenalty = 'Rp ' + new Intl.NumberFormat('id-ID').format(penalty);
-                        if (penaltyAmountSpan) penaltyAmountSpan.innerHTML = formattedPenalty;
-                        if (penaltyInput) penaltyInput.value = penalty;
-                        if (penaltyInfo) penaltyInfo.classList.remove('hidden');
-                        if (paymentSection) paymentSection.classList.remove('hidden');
+                        if(penaltyAmountSpan) penaltyAmountSpan.innerHTML = formattedPenalty;
+                        if(penaltyInput) penaltyInput.value = penalty;
+                        if(penaltyInfo) penaltyInfo.classList.remove('hidden');
+                        if(paymentSection) paymentSection.classList.remove('hidden');
                     } else {
-                        // Hide all sections for "baik" condition
-                        if (damageSection) damageSection.classList.add('hidden');
-                        if (penaltyInfo) penaltyInfo.classList.add('hidden');
-                        if (paymentSection) paymentSection.classList.add('hidden');
-                        if (proofSection) proofSection.classList.add('hidden');
-                        if (bankInfo) bankInfo.classList.add('hidden');
-                        if (penaltyInput) penaltyInput.value = 0;
-                        
-                        // Uncheck payment methods
-                        const paymentRadios = modal.querySelectorAll('.payment-radio');
-                        paymentRadios.forEach(radio => radio.checked = false);
-                        
-                        // Remove selected class from payment cards
-                        const paymentCards = modal.querySelectorAll('.payment-card');
-                        paymentCards.forEach(card => {
-                            card.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
-                        });
+                        if(damageSection) damageSection.classList.add('hidden');
+                        if(penaltyInfo) penaltyInfo.classList.add('hidden');
+                        if(paymentSection) paymentSection.classList.add('hidden');
+                        if(proofSection) proofSection.classList.add('hidden');
+                        if(bankInfo) bankInfo.classList.add('hidden');
+                        if(penaltyInput) penaltyInput.value = 0;
                     }
-                };
-                
-                card.addEventListener('click', card._listener);
+                });
             });
-
-            // Payment card click handlers
-            const paymentCards = modal.querySelectorAll('.payment-card');
+            
+            const paymentCards = document.querySelectorAll(`#${modalId} .payment-card`);
             paymentCards.forEach(card => {
-                // Remove existing listener to avoid duplicates
-                card.removeEventListener('click', card._paymentListener);
-                
-                card._paymentListener = function(e) {
-                    e.preventDefault();
-                    
-                    // Remove selected class from all payment cards
-                    paymentCards.forEach(c => {
-                        c.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
-                        const radio = c.querySelector('.payment-radio');
-                        if (radio) radio.checked = false;
-                    });
-                    
-                    // Add selected class to clicked card
+                card.addEventListener('click', function() {
+                    paymentCards.forEach(c => c.classList.remove('selected', 'border-blue-500', 'bg-blue-50'));
                     this.classList.add('selected', 'border-blue-500', 'bg-blue-50');
-                    
-                    // Check the radio button
                     const radio = this.querySelector('.payment-radio');
-                    if (radio) {
-                        radio.checked = true;
-                        const changeEvent = new Event('change', { bubbles: true });
-                        radio.dispatchEvent(changeEvent);
-                    }
+                    if(radio) radio.checked = true;
                     
-                    // Show/hide proof and bank info based on payment method
                     if (this.dataset.method === 'transfer') {
-                        if (proofSection) proofSection.classList.remove('hidden');
-                        if (bankInfo) bankInfo.classList.remove('hidden');
+                        if(proofSection) proofSection.classList.remove('hidden');
+                        if(bankInfo) bankInfo.classList.remove('hidden');
                     } else {
-                        if (proofSection) proofSection.classList.add('hidden');
-                        if (bankInfo) bankInfo.classList.add('hidden');
-                    }
-                };
-                
-                card.addEventListener('click', card._paymentListener);
-            });
-        }
-
-        // Initialize all modals when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize all existing modals
-            @foreach ($loans as $loan)
-                @if($loan->status !== 'returned')
-                    initModalListeners('return-modal-{{ $loan->id }}');
-                @endif
-            @endforeach
-            
-            // Observe for dynamically shown modals (when Flowbite shows them)
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                        const modal = mutation.target;
-                        // Check if modal is becoming visible (not hidden)
-                        if (!modal.classList.contains('hidden') && modal.classList.contains('flex')) {
-                            const modalId = modal.id;
-                            if (modalId && modalId.startsWith('return-modal-')) {
-                                // Re-initialize to ensure event listeners are attached
-                                initModalListeners(modalId);
-                            }
-                        }
+                        if(proofSection) proofSection.classList.add('hidden');
+                        if(bankInfo) bankInfo.classList.add('hidden');
                     }
                 });
             });
-            
-            // Observe all modals
-            document.querySelectorAll('[id^="return-modal-"]').forEach(modal => {
-                observer.observe(modal, { attributes: true });
+        })();
+        @endif
+        @endforeach
+        
+        // Auto hide alerts
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.animation = 'fadeOut 0.2s forwards';
+                setTimeout(() => alert.remove(), 200);
             });
-
-            // Search and filter functionality for admin/petugas
-            const searchInput = document.getElementById('searchInput');
-            const statusFilter = document.getElementById('statusFilter');
-            
-            if (searchInput && statusFilter) {
-                function filterTable() {
-                    const searchTerm = searchInput.value.toLowerCase();
-                    const statusValue = statusFilter.value;
-                    const rows = document.querySelectorAll('#loanTable tbody tr:not(.empty-row)');
-                    
-                    rows.forEach(row => {
-                        const borrower = row.dataset.borrower || '';
-                        const item = row.dataset.item || '';
-                        const status = row.dataset.status || '';
-                        
-                        const matchesSearch = searchTerm === '' || borrower.includes(searchTerm) || item.includes(searchTerm);
-                        const matchesStatus = statusValue === 'all' || status === statusValue;
-                        
-                        if (matchesSearch && matchesStatus) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-                }
-                
-                searchInput.addEventListener('keyup', filterTable);
-                statusFilter.addEventListener('change', filterTable);
-            }
-            
-            // Auto hide alerts
-            setTimeout(() => {
-                document.querySelectorAll('.alert').forEach(alert => {
-                    alert.style.animation = 'fadeOut 0.2s forwards';
-                    setTimeout(() => {
-                        if (alert && alert.remove) alert.remove();
-                    }, 200);
-                });
-            }, 4000);
-        });
+        }, 4000);
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
