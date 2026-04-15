@@ -10,7 +10,7 @@
     <!-- Flowbite -->
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
     {{-- Link Laravel --}}
-    <link href="{{ mix('resources/css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     
     <style>
         body {
